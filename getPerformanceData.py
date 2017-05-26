@@ -78,7 +78,7 @@ def get_mem(num, seconds):
         time.sleep(seconds)
         i += 1
 
-    print p_list
+    # print p_list
     return p_list
 
 
@@ -98,7 +98,7 @@ def get_meminfo():
         except Exception, e:
             print Exception, ': ', e
 
-    print mem_pss
+    # print mem_pss
     return mem_pss
 
 
@@ -108,7 +108,7 @@ def generate_chart():
     '''
 
     for path in os.listdir(path_data_file):
-        print path
+        # print path
         try:
             if path.endswith('.txt'):
                 draw_plot(path)
@@ -123,7 +123,7 @@ def draw_plot(path):
 
     f = open(os.path.join(path_data_file, path), 'r')
     mem_list = f.read().split('\n')[:-1]
-    print mem_list
+    print ('mem_list = %s' % mem_list)
     f.close()
 
     cpu_list = extract_cpu_data()
