@@ -1,9 +1,9 @@
 #coding=utf-8
 
 ############################################################################################
-# FileName:getPerformanceData.py
+# FileName:performance.py
 # Author:CathyZhang
-# Date:2017-5-25
+# Date:2017-5-26
 # Function Description:获取app的内存、cpu数据，并生成折线图
 # 注：使用dumpsys cpuinfo方法时，概率出现取不到当前app的cpu信息，故使用top命令获取cpu信息
 ############################################################################################
@@ -21,8 +21,8 @@ pkgName = 'com.mcafee.security.safefamily'
 
 path_data_file = os.getcwd() + '\\data'
 
-file_name_mem = 'mem_' + time.strftime('%Y%m%d%H%M%S') + '.txt'
-file_name_cpu = 'cpu_' + time.strftime('%Y%m%d%H%M%S') + '.txt'
+file_name_mem = 'mem_info.txt'
+file_name_cpu = 'cpu_info.txt'
 
 save_to_pic_mem = 'mem_' + time.strftime('%Y%m%d%H%M%S') + '.png'
 save_to_pic_cpu = 'cpu_' + time.strftime('%Y%m%d%H%M%S') + '.png'
@@ -34,22 +34,25 @@ def get_cpu(num, seconds):
     -n    刷新次数
     -d    刷新间隔时间
     '''
+    global results
     print 'Start to get cpu data...'
 
-    cmd = 'adb shell top -n ' + str(num) + ' -d ' + str(seconds) + ' | findstr ' + pkgName
-    results = os.popen(cmd).readlines()
+    save_path = os.path.join(path_data_file, file_name_cpu)
+    cmd = 'adb shell top -n ' + str(num) + ' -d ' + str(seconds) + ' >' + save_path
+    os.popen(cmd).readlines()
 
+
+def extract_cpu_data():
     cpu_list = []
 
-    f = open(os.path.join(path_data_file, file_name_cpu), 'a')
-
+    f = open(os.path.join(path_data_file, file_name_cpu), 'r')
+    results = f.readlines()
     for data in results:
-        cpu_value = data.split()[2].split('%')[0]
-        f.write(cpu_value + '\n')
-        cpu_list.append(cpu_value)
-
+        if pkgName in data:
+            cpu_value = data.split()[2].split('%')[0]
+            cpu_list.append(cpu_value)
     f.close()
-    print ('cpu_list = %s' %cpu_list)
+    print ('cpu_list = %s' % cpu_list)
     return cpu_list
 
 
@@ -64,16 +67,16 @@ def get_mem(num, seconds):
     i = 0
     p_list = []
 
-    f = open(os.path.join(path_data_file, file_name_mem), 'a')
-
     while i < num:
         p_data = get_meminfo()
+
+        f = open(os.path.join(path_data_file, file_name_mem), 'a')
         f.write(p_data + '\n')
+        f.close()
 
         p_list.append(p_data)
         time.sleep(seconds)
         i += 1
-    f.close()
 
     print p_list
     return p_list
@@ -119,13 +122,15 @@ def draw_plot(path):
     '''
 
     f = open(os.path.join(path_data_file, path), 'r')
-    data_list = f.read().split('\n')[:-1]
-    print data_list
+    mem_list = f.read().split('\n')[:-1]
+    print mem_list
     f.close()
 
-    pl.plot(data_list, 'b')
+    cpu_list = extract_cpu_data()
 
     if 'mem' in path:
+        pl.plot(mem_list, 'b')
+
         pl.title("Performance of MEM")
         pl.xlabel('TIME(second)')
         pl.ylabel('MEM(KB)')
@@ -134,6 +139,8 @@ def draw_plot(path):
         pl.savefig(chart_path)
 
     elif 'cpu' in path:
+        pl.plot(cpu_list, 'b')
+
         pl.title("Performance of CPU")
         pl.xlabel('TIME(second)')
         pl.ylabel('CPU(%)')
@@ -189,4 +196,3 @@ def wait_for_device():
     if not device_exist:
         print u'未识别到手机，请检查手机是否连接'
         exit()
-
