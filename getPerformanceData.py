@@ -1,7 +1,7 @@
 #coding=utf-8
 
 ############################################################################################
-# FileName:performance.py
+# FileName:getPerformanceData.py
 # Author:CathyZhang
 # Date:2017-5-26
 # Function Description:获取app的内存、cpu数据，并生成折线图
